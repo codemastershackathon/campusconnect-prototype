@@ -28,7 +28,7 @@
   "rewrites": [
     {
       "source": "/.netlify/functions/:path*",
-      "destination": "https://campusconnect-codemasters.netlify.app/.netlify/functions/:path*"
+      "destination": "/.netlify/functions/:path*"
     }
   ]
 }
