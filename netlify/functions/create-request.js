@@ -29,9 +29,15 @@ exports.handler = handle(async ({ uid, body }) => {
   if (dup) throw new HttpError(409, 'You already have a request for this post.');
 
   // Anti-spam: at most 10 requests per rolling 24 hours.
-  const since = Timestamp.fromMillis(Date.now() - 24 * 3600 * 1000);
-  const recent = await db.collection('requests').where('fromUid', '==', uid).where('createdAt', '>=', since).get();
-  if (recent.size >= DAILY_LIMIT) throw new HttpError(429, 'Daily limit of 10 requests reached. Try again tomorrow.');
+  // Single-field query (auto-indexed) + in-code time filter, so no composite index is needed and this can never 500 on a missing index.
+  const sinceMs = Date.now() - 24 * 3600 * 1000;
+  const mine = await db.collection('requests').where('fromUid', '==', uid).get();
+  const recentCount = mine.docs.filter(d => {
+    const c = d.data().createdAt;
+    const ms = c && typeof c.toMillis === 'function' ? c.toMillis() : 0;
+    return ms >= sinceMs;
+  }).length;
+  if (recentCount >= DAILY_LIMIT) throw new HttpError(429, 'Daily limit of 10 requests reached. Try again tomorrow.');
 
   // need post: the author is asking, the sender offers to help. offer post: the author helps, the sender receives.
   const isNeed = post.type === 'need';
