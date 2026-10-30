@@ -330,7 +330,7 @@ import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, ad
 /* @cc-config:start */
 const FIREBASE_CONFIG = {"apiKey":"AIzaSyBGEQJFk6VrmTxWpZsM_ttsXJVQ6MoRMyU","authDomain":"campusconnect-codemasters.firebaseapp.com","projectId":"campusconnect-codemasters","storageBucket":"campusconnect-codemasters.firebasestorage.app","messagingSenderId":"526881425620","appId":"1:526881425620:web:7e5223971ddb0049401341"};
 const ALLOWED_EMAIL_DOMAINS = ["gmail.com"];
-const FUNCTIONS_BASE_URL = "/.netlify/functions";
+const FUNCTIONS_BASE_URL = "https://campusconnect-codemasters.netlify.app/.netlify/functions";
 const USE_EMULATORS = false;
 /* @cc-config:end */
 
@@ -532,10 +532,11 @@ async function api(name, body) {
     console.error('[CampusConnect] could not reach', url, 'from', location.origin, e);
     throw new Error(e.name === 'AbortError' ? 'The server took too long to answer. Please try again.' : 'Could not reach the server. If this keeps happening the site setup needs checking (FUNCTIONS_BASE_URL / CORS) – details are in the browser console.');
   } finally { clearTimeout(timer); }
-  try { data = await res.json(); } catch (e) {}
+  let raw = ''; try { raw = await res.text(); data = JSON.parse(raw); } catch (e) {}
   if (!res.ok || data.ok === false) {
-    if (!data.error) console.error('[CampusConnect] function', name, 'answered HTTP', res.status);
-    throw new Error(data.error || (res.status === 404 ? 'The server function was not found (404). Check FUNCTIONS_BASE_URL.' : 'Server error (' + res.status + '). Please try again.'));
+    if (!data.error) console.error('[CampusConnect] function', name, 'answered HTTP', res.status, 'at', url, '- body:', raw.slice(0, 300));
+    const blocked = !data.error && (res.status === 401 || res.status === 403);
+    throw new Error(data.error || (blocked ? 'The server refused the request (' + res.status + '). The hosting may have password/login protection switched on – see the README troubleshooting table.' : res.status === 404 ? 'The server function was not found (404). Check FUNCTIONS_BASE_URL and vercel.json.' : 'Server error (' + res.status + '). Please try again.'));
   }
   return data;
 }

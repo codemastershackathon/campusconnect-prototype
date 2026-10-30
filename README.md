@@ -80,6 +80,7 @@ Those buttons call the Netlify functions; the message means the browser could no
 | Pages on Vercel but `vercel.json` has no rewrite / wrong Netlify address | Use the `rewrites` block in the shipped `vercel.json` with your real Netlify address, push |
 | Functions not deployed / wrong env | Netlify → Functions must list 6 functions; open `https://<netlify-site>/.netlify/functions/create-request` – it should answer `{"ok":false,"error":"Use POST."}` |
 | Pages hosted elsewhere calling Netlify directly | `ALLOWED_ORIGINS` must exactly equal the site address (`https://…`, no trailing slash), then redeploy Netlify |
+| Message says **"refused the request (401/403)"** | A hosting layer answered before the function ran. Test the two URLs: `https://<netlify-site>/.netlify/functions/create-request` and `https://<vercel-site>/.netlify/functions/create-request` – both must show `{"ok":false,"error":"Use POST."}`. A login/password page on Netlify → Site configuration → Access & security → turn off site protection. On Vercel → Settings → Deployment Protection → set Vercel Authentication to Disabled. A 404 page on Vercel → the `rewrites` block of `vercel.json` isn't deployed. |
 Open the browser console (F12): the line starting `[CampusConnect] could not reach` shows the exact URL and origin that failed.
 Insights empty? Run `npm run aggregate` to refresh it now (it also refreshes nightly at 02:00 UTC).
 
