@@ -7,6 +7,15 @@ class HttpError extends Error {
 
 const allowedDomains = () => (process.env.ALLOWED_EMAIL_DOMAINS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
 const allowedOrigins = () => (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim().replace(/\/$/, '')).concat(process.env.URL || []).filter(Boolean);
+// CORS is only a browser convenience: every call still needs a valid Firebase ID token (verified server-side), no cookies are used,
+// so allowing any origin cannot expose anyone's data. "*" (or leaving ALLOWED_ORIGINS unset) therefore allows every site.
+function originAllowed(origin) {
+  if (!origin) return false;
+  const raw = (process.env.ALLOWED_ORIGINS || '').trim();
+  if (!raw) return true;
+  const list = allowedOrigins();
+  return list.includes('*') || list.includes(origin.replace(/\/$/, ''));
+}
 
 function domainAllowed(email) {
   const d = String(email || '').toLowerCase().split('@')[1];
@@ -17,7 +26,7 @@ function corsHeaders(event) {
   const h = event.headers || {};
   const origin = h.origin || h.Origin || '';
   const base = { 'Access-Control-Allow-Headers': 'Authorization, Content-Type', 'Access-Control-Allow-Methods': 'POST, OPTIONS', 'Vary': 'Origin', 'Content-Type': 'application/json' };
-  if (origin && allowedOrigins().includes(origin)) base['Access-Control-Allow-Origin'] = origin;
+  if (originAllowed(origin)) base['Access-Control-Allow-Origin'] = origin;
   return base;
 }
 
