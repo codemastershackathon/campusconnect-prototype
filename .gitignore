@@ -4,6 +4,3 @@ node_modules/
 serviceAccount*.json
 .firebase/
 firebase-debug.log
-
-# Local Netlify folder
-.netlify

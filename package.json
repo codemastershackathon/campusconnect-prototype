@@ -12,7 +12,8 @@
     "test:rules": "firebase emulators:exec --only firestore \"node --test tests/rules.test.js\"",
     "emulators": "firebase emulators:start",
     "deploy:rules": "firebase deploy --only firestore",
-    "test:e2e": "node tests/e2e/server.js 8790 & python3 tests/e2e/e2e.py 8790"
+    "test:e2e": "node tests/e2e/server.js 8790 & python3 tests/e2e/e2e.py 8790",
+    "aggregate": "node scripts/aggregate-now.js"
   },
   "dependencies": {
     "firebase-admin": "^12.7.0"

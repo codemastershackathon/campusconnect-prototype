@@ -6,7 +6,7 @@ class HttpError extends Error {
 }
 
 const allowedDomains = () => (process.env.ALLOWED_EMAIL_DOMAINS || '').split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
-const allowedOrigins = () => (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+const allowedOrigins = () => (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim().replace(/\/$/, '')).concat(process.env.URL || []).filter(Boolean);
 
 function domainAllowed(email) {
   const d = String(email || '').toLowerCase().split('@')[1];

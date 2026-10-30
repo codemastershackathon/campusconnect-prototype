@@ -34,7 +34,7 @@ const POSTS = [
 
 async function clean() {
   let n = 0;
-  for (const col of ['posts', 'requests', 'users']) {
+  for (const col of ['posts', 'requests', 'notifications', 'users']) {
     const snap = await db.collection(col).where('isDemo', '==', true).get();
     for (const d of snap.docs) { if (col === 'users') { await d.ref.collection('private').doc('contact').delete(); try { await auth.deleteUser(d.id); } catch (e) {} } await d.ref.delete(); n++; }
   }

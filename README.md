@@ -54,7 +54,7 @@ npm run init-config         # creates config/app (karma points, badge thresholds
 * **Functions → Netlify:** connect the repo; set env vars `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`,
   `FIREBASE_PRIVATE_KEY` (with the `\n` sequences, in quotes), `ALLOWED_EMAIL_DOMAINS`, `ALLOWED_ORIGINS`
   (your Vercel URL). `netlify.toml` already schedules `aggregate-tags` nightly at 02:00 UTC.
-  Put the resulting `https://<site>.netlify.app/.netlify/functions` into `FUNCTIONS_BASE_URL` and re-run `npm run configure`.
+  Keep `FUNCTIONS_BASE_URL=/.netlify/functions` (relative). `vercel.json` forwards that path from Vercel to your Netlify site, so the browser only talks to its own domain and **no CORS setup is needed**. Edit the `destination` in `vercel.json` if your Netlify address differs from `campusconnect-codemasters.netlify.app`.
 * **Pages → Vercel:** import the repo; `vercel.json` serves `public/` with clean URLs and security headers.
 
 ### 5. First users
@@ -71,6 +71,17 @@ npm run seed -- --clean                            # remove all demo data later
 * **Email-link sign-in is limited to 5 emails/day project-wide on Spark** (25,000/day on Blaze). Use **Google sign-in** as the main route and don't spam "Resend".
 * The board loads 30 posts per fetch (with *Load more*) to protect the read quota. Each page also keeps small listeners (inbox count, notification dot) that only cost reads when something changes.
 * Watch usage in Firebase → Firestore → Usage. If you ever move to Blaze, add a Google Cloud **budget alert** (it warns; it does not stop spending).
+
+## If connect / report / moderation buttons say "Could not reach the server"
+Those buttons call the Netlify functions; the message means the browser could not reach them at all (not that the function failed).
+| Cause | Fix |
+|---|---|
+| `FUNCTIONS_BASE_URL` was built into the pages as `localhost` or a wrong address | Set `FUNCTIONS_BASE_URL=/.netlify/functions` in `.env`, run `npm run configure`, commit, push |
+| Pages on Vercel but `vercel.json` has no rewrite / wrong Netlify address | Use the `rewrites` block in the shipped `vercel.json` with your real Netlify address, push |
+| Functions not deployed / wrong env | Netlify → Functions must list 6 functions; open `https://<netlify-site>/.netlify/functions/create-request` – it should answer `{"ok":false,"error":"Use POST."}` |
+| Pages hosted elsewhere calling Netlify directly | `ALLOWED_ORIGINS` must exactly equal the site address (`https://…`, no trailing slash), then redeploy Netlify |
+Open the browser console (F12): the line starting `[CampusConnect] could not reach` shows the exact URL and origin that failed.
+Insights empty? Run `npm run aggregate` to refresh it now (it also refreshes nightly at 02:00 UTC).
 
 ## If "Continue with Google" does not work – checklist
 Open the browser console (F12) and read the red error, then match it:
