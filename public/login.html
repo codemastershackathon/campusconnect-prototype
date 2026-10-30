@@ -546,7 +546,8 @@ async function api(name, body) {
   if (!res.ok || data.ok === false) {
     if (!data.error) console.error('[CampusConnect] function', name, 'answered HTTP', res.status, 'at', url, '- body:', raw.slice(0, 300));
     const blocked = !data.error && (res.status === 401 || res.status === 403);
-    throw new Error(data.error || (blocked ? 'The server refused the request (' + res.status + '). The hosting may have password/login protection switched on – see the README troubleshooting table.' : res.status === 404 ? 'The server function was not found (404). Check FUNCTIONS_BASE_URL and vercel.json.' : 'Server error (' + res.status + '). Please try again.'));
+    if (data.error && res.status >= 500 && data.code) console.error('[CampusConnect] server error code', data.code, 'from', name);
+    throw new Error((data.error && res.status >= 500 && data.code ? data.error + ' (server code ' + data.code + ')' : data.error) || (blocked ? 'The server refused the request (' + res.status + '). The hosting may have password/login protection switched on – see the README troubleshooting table.' : res.status === 404 ? 'The server function was not found (404). Check FUNCTIONS_BASE_URL and vercel.json.' : 'Server error (' + res.status + '). Please try again.'));
   }
   return data;
 }

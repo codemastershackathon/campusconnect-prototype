@@ -73,7 +73,8 @@ function handle(fn, opts = {}) {
     } catch (e) {
       if (e instanceof HttpError) return reply(event, e.status, { ok: false, error: e.message });
       console.error('function error', e);
-      return reply(event, 500, { ok: false, error: 'Something went wrong. Please try again.' });
+      // Only a short machine code is sent to the browser (gRPC status such as 9 = missing index, 16 = bad credentials); full details stay in the server log.
+      return reply(event, 500, { ok: false, error: 'Something went wrong. Please try again.', code: String((e && (e.code || e.name)) || 'unknown').slice(0, 40) });
     }
   };
 }
